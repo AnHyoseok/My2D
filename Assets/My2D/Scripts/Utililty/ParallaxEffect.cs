@@ -9,7 +9,7 @@ namespace My2D
     public class ParallaxEffect : MonoBehaviour
     {
         #region Variables
-        public Camera camera;            // 카메라
+        public new Camera  camera;            // 카메라
         public Transform followTarget;   // 플레이어
 
         // 여러 배경을 처리하기 위한 리스트
