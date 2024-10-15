@@ -478,6 +478,12 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
+  - m_Name: IsWall
+    m_Type: 4
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Player
@@ -924,10 +930,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boolName: 
+  updateOnState: 0
+  updateOnStateMachine: 0
   valueEnter: 0
   valueExit: 0
-  updateOnstate: 0
-  updateOnstateMachine: 1
 --- !u!1107 &8788920727170360741
 AnimatorStateMachine:
   serializedVersion: 6

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,56 +10,47 @@ namespace My2D
         private Animator animator;
         private TouchingDirections touchingDirections;
 
-
-        //플레이어 걷기 속도
+        //플레이어 이동 속도
         [SerializeField] private float walkSpeed = 4f;
         [SerializeField] private float runSpeed = 8f;
         [SerializeField] private float airSpeed = 2f;
 
-
-        //점프높이
-        [SerializeField] private float jumpForce = 5f;
-
-
-
-        AnimationString AnimationString;
-
-        //플레이어 속도 변화
         public float CurrentMoveSpeed
         {
             get
             {
                 if (CanMove)
                 {
-
-                    if (IsMove)
+                    if (IsMove && touchingDirections.IsWall == false)
                     {
-                        if (!touchingDirections.IsGround)
+                        if (touchingDirections.IsGround)
                         {
-                            return airSpeed;
-                        }
-                        if (IsRun)
-                        {
-                            return runSpeed;
+                            if (isRun)
+                            {
+                                return runSpeed;
+                            }
+                            else
+                            {
+                                return walkSpeed;
+                            }
                         }
                         else
                         {
-                            return walkSpeed;
+                            return airSpeed;
                         }
                     }
                     else
                     {
-                        return 0;
+                        return 0f;  //idle state
                     }
-
                 }
                 else
                 {
-                    return 0; //움직이지 못할때
+                    return 0f;  //움직이지 못할때
                 }
-
             }
         }
+
         //이동여부
         public bool CanMove
         {
@@ -69,7 +58,6 @@ namespace My2D
             {
                 return animator.GetBool(AnimationString.CanMove);
             }
-
         }
 
         //플레이어 이동과 관련된 입력값
@@ -79,7 +67,10 @@ namespace My2D
         [SerializeField] private bool isMove = false;
         public bool IsMove
         {
-            get { return isMove; }
+            get
+            {
+                return isMove;
+            }
             set
             {
                 isMove = value;
@@ -87,20 +78,23 @@ namespace My2D
             }
         }
 
-        //달리기
+        //뛰기
         [SerializeField] private bool isRun = false;
         public bool IsRun
         {
-            get { return isRun; }
+            get
+            {
+                return isRun;
+            }
             set
             {
                 isRun = value;
                 animator.SetBool(AnimationString.IsRun, value);
             }
         }
-        //좌우반전
-        [SerializeField] private bool isFacingRight = true;
 
+        //좌우 반전
+        [SerializeField] private bool isFacingRight = true;
         public bool IsFacingRight
         {
             get
@@ -117,11 +111,15 @@ namespace My2D
                 isFacingRight = value;
             }
         }
+
+        //점프
+        [SerializeField] private float jumpForce = 5f;
         #endregion
 
         private void Awake()
-        {   //참조
-            rb2D = GetComponent<Rigidbody2D>();
+        {
+            //참조
+            rb2D = this.GetComponent<Rigidbody2D>();
             animator = GetComponent<Animator>();
             touchingDirections = GetComponent<TouchingDirections>();
         }
@@ -130,22 +128,22 @@ namespace My2D
         {
             //플레이어 좌우 이동
             rb2D.velocity = new Vector2(inputMove.x * CurrentMoveSpeed, rb2D.velocity.y);
-            animator.SetFloat("YVelocity", rb2D.velocity.y);
+
+            //애니메이션 값
+            animator.SetFloat(AnimationString.YVelocity, rb2D.velocity.y);
         }
 
-
-
+        //바라보는 방향을 전환
         void SetFacingDirection(Vector2 moveInput)
         {
-
-            //오른쪽바라보기
             if (moveInput.x > 0f && IsFacingRight == false)
             {
+                //오른쪽을 바라본다
                 IsFacingRight = true;
             }
-            //왼쪽바라보기
             else if (moveInput.x < 0f && IsFacingRight == true)
             {
+                //왼쪽을 바라본다
                 IsFacingRight = false;
             }
         }
@@ -157,44 +155,38 @@ namespace My2D
 
             //방향전환
             SetFacingDirection(inputMove);
-
         }
 
         public void OnRun(InputAction.CallbackContext context)
         {
+            //누르기 시작하는 순간
             if (context.started)
             {
                 IsRun = true;
             }
-            else if (context.canceled)
+            else if (context.canceled)   //릴리즈 하는 순간
             {
                 IsRun = false;
             }
         }
 
-        // 점프 처리
         public void OnJump(InputAction.CallbackContext context)
         {
+            //누르기 시작하는 순간, 이중 점프 x
             if (context.started && touchingDirections.IsGround)
             {
-                rb2D.velocity = new Vector2(0f, jumpForce);
-
                 animator.SetTrigger(AnimationString.JumpTrigger);
-
+                rb2D.velocity = new Vector2(rb2D.velocity.x, jumpForce);
             }
         }
 
-        // 공격 처리
         public void OnAttack(InputAction.CallbackContext context)
         {
-            //지상공격
-            if (context.started && touchingDirections.IsGround && !isMove)
+            //마우스 클릭순간 시작하는 순간
+            if (context.started && touchingDirections.IsGround)
             {
                 animator.SetTrigger(AnimationString.AttackTrigger);
-
             }
         }
-
-
     }
 }

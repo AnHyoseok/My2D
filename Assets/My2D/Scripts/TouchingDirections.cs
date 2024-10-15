@@ -5,58 +5,71 @@ using UnityEngine.InputSystem;
 
 namespace My2D
 {
-
+    //바닥 체크, 벽 체크, 천정 체크
     public class TouchingDirections : MonoBehaviour
     {
-        #region variables
-        private CapsuleCollider2D touchingCollider;
+        #region Variables
+        private CapsuleCollider2D touchingCollier;
+        private Animator animator;
+
         [SerializeField] private ContactFilter2D contactFilter;
         [SerializeField] private float groundDistance = 0.05f;
-        //[SerializeField] private float ceilingDistance = 0.05f;
+        [SerializeField] private float ceilingDistance = 0.05f;
+        [SerializeField] private float wallDistance = 0.2f;
+
         private RaycastHit2D[] groundHits = new RaycastHit2D[5];
-        //private RaycastHit2D[] ceilingHits = new RaycastHit2D[5];
+        private RaycastHit2D[] ceilingHits = new RaycastHit2D[5];
+        private RaycastHit2D[] wallHits = new RaycastHit2D[5];
+
         [SerializeField] private bool isGround;
-        private Rigidbody2D rb2D;
-        private Animator animator;
-  
-
-
         public bool IsGround
         {
             get { return isGround; }
             private set
             {
                 isGround = value;
-                animator.SetBool(AnimationString.IsGround, isGround);
+                animator.SetBool(AnimationString.IsGround, value);
             }
         }
-    /*    public bool IsCeiling
+
+        [SerializeField] private bool isCeiling;
+        public bool IsCeiling
         {
-            get { return IsCeiling; }
+            get { return isCeiling; }
             private set
             {
-                IsCeiling = value;
-                animator.SetBool(AnimationString.IsCeiling, IsCeiling);
+                isCeiling = value;
+                animator.SetBool(AnimationString.IsCeiling, value);
             }
         }
-*/
+
+        [SerializeField] private bool isWall;
+        public bool IsWall
+        {
+            get { return isWall; }
+            private set
+            {
+                isWall = value;
+                animator.SetBool(AnimationString.IsWall, value);
+            }
+        }
+
+        private Vector2 WalkDirection => (transform.localScale.x > 0) ? Vector2.right : Vector2.left;
         #endregion
+
         private void Awake()
         {
             //참조
+            touchingCollier = GetComponent<CapsuleCollider2D>();
             animator = GetComponent<Animator>();
-            rb2D = GetComponent<Rigidbody2D>();
-            touchingCollider = GetComponent<CapsuleCollider2D>();
         }
-
 
         private void FixedUpdate()
         {
-            IsGround = (touchingCollider.Cast(Vector2.down, contactFilter, groundHits, groundDistance)) > 0;
-            //IsCeiling = (touchingCollider.Cast(Vector2.up, contactFilter, ceilingHits, ceilingDistance)) > 0;
-    
+            IsGround = (touchingCollier.Cast(Vector2.down, contactFilter, groundHits, groundDistance) > 0);
+            IsCeiling = (touchingCollier.Cast(Vector2.up, contactFilter, ceilingHits, ceilingDistance) > 0);
+            IsWall = (touchingCollier.Cast(WalkDirection, contactFilter, wallHits, wallDistance) > 0);
         }
-
     }
 
 }
