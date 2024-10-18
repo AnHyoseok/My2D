@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
-
+using UnityEngine.Events;
 namespace My2D
 {
 
@@ -10,6 +11,9 @@ namespace My2D
         #region Variables
 
         private Animator animator;
+
+        //데미지 입을때 등록된 함수 호출 
+        public UnityAction<float, Vector2> hitAction;
 
         //최대체력
         [SerializeField] private float maxHealth = 100f;
@@ -59,8 +63,23 @@ namespace My2D
 
         //무적모드
         private bool isInvincible = false;
-      [SerializeField]  private float invincibleTimer = 2f;
+        [SerializeField] private float invincibleTimer = 2f;
         private float countdown = 0f;
+
+        //
+        public bool LockVelocity
+        {
+            get
+            {
+                return animator.GetBool(AnimationString.LockVelocity);
+
+            }
+            set
+            {
+
+                animator.SetBool(AnimationString.LockVelocity, value);
+            }
+        }
 
         #endregion
 
@@ -69,7 +88,7 @@ namespace My2D
             //참조
             animator = GetComponent<Animator>();
 
-         
+
         }
 
         private void Start()
@@ -96,19 +115,58 @@ namespace My2D
         }
 
         //TakeDamage
-        public void TakeDamage(float damage)
+        public void TakeDamage(float damage, Vector2 knocback)
         {
             if (!IsDeath && !isInvincible)
             {
                 //무적모드 초기화
                 isInvincible = true;
 
+                //데미지 전의 hp
+                float beforeHealth = CurrentHealth;
 
                 CurrentHealth -= damage;
                 Debug.Log($"{transform.name}의 현재 체력은{currentHealth}");
+
+                LockVelocity = true;
                 //애니메이션
                 animator.SetTrigger(AnimationString.HitTrigger);
+
+                ////데미지효과
+                //if (hitAction != null)
+                //{
+                //    hitAction.Invoke(damage, knocback);
+                //}
+
+                float realDamage = beforeHealth - currentHealth;
+
+                hitAction?.Invoke(realDamage, knocback);
+                CharacterEvent.characterDamaged?.Invoke(gameObject, realDamage);
             }
         }
+
+        public bool Heal(float restrore)
+        {
+            if (CurrentHealth >= MaxHealth)
+            {
+                return false;
+            }
+
+            //힐 전의 hp
+            float beforeHealth = CurrentHealth;
+
+            currentHealth += restrore;
+            currentHealth = Mathf.Clamp(currentHealth, 0f, MaxHealth);
+
+            //실제 힐 hp값
+            float realHealth = currentHealth - beforeHealth;
+
+            CharacterEvent.characterHealth?.Invoke(gameObject, realHealth);
+
+            Debug.Log($"{transform.name}의 현재 체력은{currentHealth}");
+
+            return true;
+        }
+
     }
 }

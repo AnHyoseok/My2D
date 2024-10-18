@@ -13,8 +13,11 @@ namespace My2D
         Animator animator;
         Rigidbody2D rb2D;
         private TouchingDirections touchingDirections;
+        private Damageable damageable;
         //플레이어 감지
         public DetectionZone detectionZone;
+        //낭떨어지감지
+        public DetectionZone detectionCilff;
 
         //이동
         [SerializeField] private float runSpeed = 4f;
@@ -71,6 +74,10 @@ namespace My2D
         }
         //감속 계수 
         [SerializeField] private float stopRate = 0.2f;
+
+        //DamageText
+        
+
         #endregion
 
 
@@ -81,7 +88,12 @@ namespace My2D
             rb2D = GetComponent<Rigidbody2D>();
             touchingDirections = GetComponent<TouchingDirections>();
 
-            
+            damageable = GetComponent<Damageable>();
+            damageable.hitAction += onHit;
+
+            detectionCilff.noColliderRamain += OnCliffDetection;
+
+
         }
 
         private void Update()
@@ -98,17 +110,20 @@ namespace My2D
                 Flip();
             }
 
-         
+            if (!damageable.LockVelocity)
+            {
+                //이동
+                if (CanMove)
+                {
+                    rb2D.velocity = new Vector2(directionVector.x * runSpeed, rb2D.velocity.y);
+                }
+                else
+                {
+                    rb2D.velocity = new Vector2(Mathf.Lerp(rb2D.velocity.x, 0f, stopRate), rb2D.velocity.y);
+                }
+            }
 
-            //이동
-            if (CanMove)
-            {
-                rb2D.velocity = new Vector2(directionVector.x * runSpeed, rb2D.velocity.y);
-            }
-            else
-            {
-                rb2D.velocity = new Vector2(Mathf.Lerp(rb2D.velocity.x,0f,stopRate), rb2D.velocity.y);
-            }
+
         }
 
         void Flip()
@@ -124,6 +139,20 @@ namespace My2D
             else
             {
                 Debug.Log("에러");
+            }
+        }
+
+        public void onHit(float damage, Vector2 knockback)
+        {
+            rb2D.velocity = new Vector2(knockback.x, rb2D.velocity.y + knockback.y);
+        }
+
+        public void OnCliffDetection()
+        {
+            if (touchingDirections.IsGround)
+            {
+                Flip();
+
             }
         }
     }

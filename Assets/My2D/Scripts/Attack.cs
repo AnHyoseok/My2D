@@ -9,6 +9,11 @@ namespace My2D
     {
         //공격력
         [SerializeField] private float attacKDamege = 10f;
+
+        public Vector2 knockback = Vector2.zero;
+   
+
+
         //충돌 체크해서 공격력 만큼 데미지 준다 
         private void OnTriggerEnter2D(Collider2D collision)
         {
@@ -17,9 +22,15 @@ namespace My2D
 
             if (damageable != null)
             {
-                damageable.TakeDamage(attacKDamege);
+                //knockback의 방향 설정
+                Vector2 deliveredKnockback = (transform.parent.localScale.x >0) ? knockback : new Vector2(-knockback.x, knockback.y);
+
+                damageable.TakeDamage(attacKDamege,knockback);
+
+         ;
+
                 //Debug.Log($"{collision.name} {damageable.CurrentHealth}데미지를 입었다");
-               
+
             }
 
         }
